@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mapa Michoacán con ruleta de descuentos</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #2274A5;
+      --secondary: #16a085;
+      --accent: #c0392b;
+      --light: #f5f5f5;
+      --dark: #333;
+      --shadow: 0 6px 15px rgba(0,0,0,.2);
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, Roboto, Arial, sans-serif;
+      background: #f0f2f5;
+      color: #333;
+      overflow: hidden;
+    }
+    
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to right, #2274A5, #16a085);
+      color: white;
+      padding: 12px 20px;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow);
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 600;
+    }
+    
+    .user-actions {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 6px 12px;
+      border-radius: 20px;
+    }
+    
+    .mapa {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      padding-top: 60px;
+    }
+    
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+    
+    .info-overlay {
+      position: absolute;
+      top: 80px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      color: var(--dark);
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 320px;
+      font-size: 14px;
+      display: none;
+      box-shadow: var(--shadow);
+      z-index: 40;
+      border-left: 5px solid var(--secondary);
+    }
+    
+    .info-overlay h3 {
+      margin-top: 0;
+      color: var(--primary);
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+    
+    .info-overlay img {
+      width: 100%;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      display: block;
+      height: 180px;
+      object-fit: cover;
+    }
+    
+    .close-overlay {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: #888;
+    }
+    
+    /* Contenedores separados */
+    .panel-container {
+      position: fixed;
+      z-index: 20;
+    }
+    
+    .mapa-zonas-container {
+      bottom: 1.5rem;
+      left: 1.5rem;
+    }
+    
+    .ruleta-container {
+      bottom: 1.5rem;
+      right: 1.5rem;
+      cursor: move;
+    }
+    
+    .imagen-zonas {
+      width: 300px;
+      box-shadow: var(--shadow);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
+      position: relative;
+    }
+    
+    .imagen-zonas img {
+      width: 100%;
+      display: block;
+    }
+    
+    .tooltip {
+      position: absolute;
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      transform: translate(-50%, -120%);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 30;
+    }
+    
+    area { 
+      cursor: pointer; 
+    }
+
+    /* Ruleta panel */
+    .ruleta-panel {
+      width: 320px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      font-size: 14px;
+      text-align: center;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+      cursor: move;
+    }
+    
+    .panel-title {
+      margin: 0;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .panel-controls {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .control-btn {
+      background: none;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      color: #888;
+      transition: all 0.3s;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .control-btn:hover {
+      background: #f5f5f5;
+      color: var(--primary);
+    }
+    
+    .ruleta-panel.minimized {
+      width: 200px;
+      height: auto;
+      padding: 15px;
+    }
+    
+    .wheel-container {
+      position: relative;
+      width: 250px;
+      height: 250px;
+      margin: 0 auto 15px;
+      transition: all 0.3s ease;
+    }
+    
+    .ruleta-panel.minimized .wheel-container,
+    .ruleta-panel.minimized .btn,
+    .ruleta-panel.minimized .result {
+      display: none;
+    }
+    
+    canvas {
+      display: block;
+      margin: 0 auto;
+    }
+    
+    .wheel-pointer {
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 30px;
+      height: 30px;
+      z-index: 10;
+      color: var(--accent);
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border-radius: 30px;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: bold;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      color: #fff;
+      transition: all 0.3s;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+    
+    .btn:disabled {
+      background: #bdc3c7;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .result {
+      margin-top: 15px;
+      font-weight: bold;
+      padding: 12px;
+      border-radius: 8px;
+      background: #f8f9fa;
+    }
+    
+    .success {
+      color: var(--secondary);
+      background: rgba(22, 160, 133, 0.1);
+      border-left: 4px solid var(--secondary);
+    }
+    
+    .fail {
+      color: var(--accent);
+      background: rgba(192, 57, 43, 0.1);
+      border-left: 4px solid var(--accent);
+    }
+    
+    .timer {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #7f8c8d;
+      text-align: center;
+    }
+    
+    .minimized-timer {
+      display: none;
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--primary);
+      text-align: center;
+    }
+    
+    .ruleta-panel.minimized .minimized-timer {
+      display: block;
+    }
+    
+    .ruleta-panel.minimized .timer {
+      display: none;
+    }
+    
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .mapa-zonas-container {
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 320px;
+      }
+      
+      .ruleta-container {
+        top: 70px;
+        right: 10px;
+        bottom: auto;
+      }
+      
+      .imagen-zonas {
+        width: 100%;
+      }
+      
+      .info-overlay {
+        top: 70px;
+        right: 10px;
+        max-width: 280px;
+      }
+      
+      .ruleta-panel {
+        width: 280px;
+      }
+      
+      .ruleta-panel.minimized {
+        width: 180px;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 1.2rem;
+      }
+      
+      .user-info span {
+        display: none;
+      }
+      
+      .ruleta-panel.minimized {
+        width: 160px;
+        height: 50px;
+      }
+      
+      .minimized-timer {
+        font-size: 12px;
+      }
+      
+      .mapa-zonas-container {
+        bottom: 70px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <h1><i class="fas fa-map-marked-alt"></i> Mapa Interactivo de Michoacán</h1>
+    <div class="user-actions">
+      <div class="user-info">
+        <i class="fas fa-user"></i>
+        <span>Visitante</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mapa -->
+  <div class="mapa">
+    <iframe
+      id="gmap"
+      src="https://www.google.com/maps?q=19.152399,-101.642784&z=7&output=embed"
+      allowfullscreen
+      loading="lazy"></iframe>
+
+    <div class="info-overlay" id="infoOverlay">
+      <button class="close-overlay" id="closeOverlay"><i class="fas fa-times"></i></button>
+      <img src="" alt="Imagen ciudad" id="overlayImg">
+      <h3 id="overlayTitle"></h3>
+      <div id="overlayText"></div>
+    </div>
+  </div>
+
+  <!-- Contenedor del mapa de zonas (separado) -->
+  <div class="panel-container mapa-zonas-container">
+    <div class="imagen-zonas">
+      <img src="si2.png" alt="Mapa de zonas" usemap="#mapaZonas" id="imagen">
+      <div class="tooltip" id="tooltip">Texto</div>
+      <map name="mapaZonas">
+        <!-- Uruapan -->
+        <area shape="rect" coords="50,50,100,100"
+              data-nombre="Uruapan"
+              data-lat="19.412" data-lng="-102.062" data-zoom="13"
+              data-img="aguacate.png"
+              data-random="Uruapan es la Capital Mundial del Aguacate.|En Uruapan se celebra el Tianguis Artesanal.|Uruapan tiene el Parque Nacional Barranca del Cupatitzio.">
+        <!-- Morelia -->
+        <area shape="rect" coords="0,50,150,0"
+              data-nombre="Morelia"
+              data-lat="19.700" data-lng="-101.184" data-zoom="13"
+              data-img="porkyLP.png"
+              data-random="Morelia es famosa por su acueducto colonial.|Morelia es Patrimonio de la Humanidad.|En Morelia se realiza el Festival Internacional de Cine.">
+        <!-- Pátzcuaro -->
+        <area shape="rect" coords="120,80,180,120"
+              data-nombre="Pátzcuaro"
+              data-lat="19.516" data-lng="-101.608" data-zoom="13"
+              data-img="viejito.png"
+              data-random="Pátzcuaro es conocido por su lago y sus islas.|En Pátzcuaro se celebra la Noche de Muertos.|Pátzcuaro fue capital del imperio purépecha.">
+      </map>
+    </div>
+  </div>
+
+  <!-- Contenedor de la ruleta (separado y movible) -->
+  <div class="panel-container ruleta-container" id="ruletaContainer">
+    <div class="ruleta-panel" id="ruletaPanel">
+      <div class="panel-header" id="panelHeader">
+        <h3 class="panel-title"><i class="fas fa-gift"></i> Ruleta de descuentos</h3>
+        <div class="panel-controls">
+          <button class="control-btn minimize-btn" id="minimizeBtn" title="Minimizar"><i class="fas fa-minus"></i></button>
+          <button class="control-btn expand-btn" id="expandBtn" title="Expandir" style="display:none"><i class="fas fa-expand"></i></button>
+        </div>
+      </div>
+      
+      <div id="ruletaContent">
+        <div class="wheel-container">
+          <canvas id="canvas" width="250" height="250"></canvas>
+          <div class="wheel-pointer">
+            <i class="fas fa-caret-down" style="font-size: 30px;"></i>
+          </div>
+        </div>
+        <button class="btn" id="spin"><i class="fas fa-redo-alt"></i> Girar</button>
+        <div id="result" class="result"></div>
+        <div id="timer" class="timer"></div>
+      </div>
+      
+      <div id="minimizedTimer" class="minimized-timer"></div>
+    </div>
+  </div>
+
+  <script>
+    // --- Ruleta ---
+    const options = [
+      "5% de descuento", "10% de descuento", "15% de descuento", 
+      "20% de descuento", "25% de descuento", "30% de descuento",
+      "35% de descuento", "40% de descuento", "45% de descuento", "50% de descuento"
+    ];
+    
+    const colors = [
+      "#16a085", "#27ae60", "#2ecc71", "#3498db", "#2980b9",
+      "#8e44ad", "#9b59b6", "#f1c40f", "#f39c12", "#e67e22"
+    ];
+    
+    let startAngle = 0;
+    const arc = Math.PI / (options.length / 2);
+    let spinTimeout = null;
+    let spinAngleStart = 10;
+    let spinTime = 0;
+    let spinTimeTotal = 0;
+    let ctx;
+
+    const spinBtn = document.getElementById("spin");
+    const resultDiv = document.getElementById("result");
+    const timerDiv = document.getElementById("timer");
+    const minimizedTimerDiv = document.getElementById("minimizedTimer");
+    const ruletaContent = document.getElementById("ruletaContent");
+    const ruletaPanel = document.getElementById("ruletaPanel");
+    const minimizeBtn = document.getElementById("minimizeBtn");
+    const expandBtn = document.getElementById("expandBtn");
+    const ruletaContainer = document.getElementById("ruletaContainer");
+    const panelHeader = document.getElementById("panelHeader");
+    const lastSpinKey = "lastSpinTime";
+
+    // Funcionalidad de arrastrar
+    let isDragging = false;
+    let currentX;
+    let currentY;
+    let initialX;
+    let initialY;
+    let xOffset = 0;
+    let yOffset = 0;
+
+    panelHeader.addEventListener("mousedown", dragStart);
+    panelHeader.addEventListener("mouseup", dragEnd);
+    panelHeader.addEventListener("mousemove", drag);
+    
+    panelHeader.addEventListener("touchstart", dragStart);
+    panelHeader.addEventListener("touchend", dragEnd);
+    panelHeader.addEventListener("touchmove", drag);
+
+    function dragStart(e) {
+      if (e.type === "touchstart") {
+        initialX = e.touches[0].clientX - xOffset;
+        initialY = e.touches[0].clientY - yOffset;
+      } else {
+        initialX = e.clientX - xOffset;
+        initialY = e.clientY - yOffset;
+      }
+
+      if (e.target === panelHeader || e.target.parentElement === panelHeader) {
+        isDragging = true;
+      }
+    }
+
+    function dragEnd(e) {
+      initialX = currentX;
+      initialY = currentY;
+      isDragging = false;
+    }
+
+    function drag(e) {
+      if (isDragging) {
+        e.preventDefault();
+        
+        if (e.type === "touchmove") {
+          currentX = e.touches[0].clientX - initialX;
+          currentY = e.touches[0].clientY - initialY;
+        } else {
+          currentX = e.clientX - initialX;
+          currentY = e.clientY - initialY;
+        }
+
+        xOffset = currentX;
+        yOffset = currentY;
+
+        setTranslate(currentX, currentY, ruletaContainer);
+      }
+    }
+
+    function setTranslate(xPos, yPos, el) {
+      el.style.transform = "translate3d(" + xPos + "px, " + yPos + "px, 0)";
+    }
+
+    // Funcionalidad de minimizar/expandir
+    minimizeBtn.addEventListener("click", () => {
+      ruletaPanel.classList.add("minimized");
+      minimizeBtn.style.display = "none";
+      expandBtn.style.display = "flex";
+      updateMinimizedTimer();
+    });
+    
+    expandBtn.addEventListener("click", () => {
+      ruletaPanel.classList.remove("minimized");
+      minimizeBtn.style.display = "flex";
+      expandBtn.style.display = "none";
+    });
+
+    function drawRouletteWheel() {
+      const canvas = document.getElementById("canvas");
+      if (canvas.getContext) {
+        const outsideRadius = 100;
+        const textRadius = 70;
+        const insideRadius = 40;
+
+        ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, 250, 250);
+
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 2;
+
+        for (let i = 0; i < options.length; i++) {
+          const angle = startAngle + i * arc;
+          
+          // Fondo del segmento
+          ctx.fillStyle = colors[i];
+          ctx.beginPath();
+          ctx.arc(125, 125, outsideRadius, angle, angle + arc, false);
+          ctx.arc(125, 125, insideRadius, angle + arc, angle, true);
+          ctx.stroke();
+          ctx.fill();
+
+          // Texto
+          ctx.save();
+          ctx.fillStyle = "white";
+          ctx.font = "bold 12px Segoe UI, sans-serif";
+          ctx.translate(125 + Math.cos(angle + arc / 2) * textRadius,
+                        125 + Math.sin(angle + arc / 2) * textRadius);
+          ctx.rotate(angle + arc / 2 + Math.PI / 2);
+          const text = options[i];
+          ctx.fillText(text, -ctx.measureText(text).width / 2, 0);
+          ctx.restore();
+        }
+
+        // Centro de la ruleta
+        ctx.fillStyle = "#2274A5";
+        ctx.beginPath();
+        ctx.arc(125, 125, insideRadius, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.stroke();
+        
+        ctx.fillStyle = "white";
+        ctx.font = "bold 14px Segoe UI";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("GIRA", 125, 125);
+      }
+    }
+
+    function rotateWheel() {
+      spinTime += 30;
+      if (spinTime >= spinTimeTotal) {
+        stopRotateWheel();
+        return;
+      }
+      const spinAngle = spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal);
+      startAngle += (spinAngle * Math.PI / 180);
+      drawRouletteWheel();
+      spinTimeout = setTimeout(rotateWheel, 30);
+    }
+
+    function stopRotateWheel() {
+      clearTimeout(spinTimeout);
+      const degrees = startAngle * 180 / Math.PI + 90;
+      const arcd = arc * 180 / Math.PI;
+      const index = Math.floor((360 - (degrees % 360)) / arcd) % options.length;
+      const text = options[index];
+      resultDiv.innerHTML = `<span class='success'><i class="fas fa-trophy"></i> ¡Felicidades! Ganaste ${text}</span><br>Vuelve a intentarlo en 1 hora.`;
+      
+      // Guardar tiempo y actualizar contador
+      localStorage.setItem(lastSpinKey, Date.now());
+      updateTimer();
+      updateMinimizedTimer();
+      
+      spinBtn.disabled = true;
+    }
+
+    function easeOut(t, b, c, d) {
+      const ts = (t /= d) * t;
+      const tc = ts * t;
+      return b + c * (tc + -3 * ts + 3 * t);
+    }
+
+    spinBtn.addEventListener("click", () => {
+      if (!canSpin()) {
+        const remaining = getRemainingTime();
+        resultDiv.innerHTML = `<span class='fail'><i class="fas fa-clock"></i> Debes esperar ${remaining} minutos antes de girar otra vez.</span>`;
+        return;
+      }
+      
+      spinBtn.disabled = true;
+      resultDiv.innerHTML = "";
+      
+      spinAngleStart = Math.random() * 10 + 20;
+      spinTime = 0;
+      spinTimeTotal = Math.random() * 1000 + 5000;
+      rotateWheel();
+    });
+
+    function canSpin() {
+      const lastSpin = localStorage.getItem(lastSpinKey);
+      if (!lastSpin) return true;
+      const elapsed = Date.now() - parseInt(lastSpin);
+      return elapsed >= 3600000; // 1 hora
+    }
+
+    function getRemainingTime() {
+      const lastSpin = localStorage.getItem(lastSpinKey);
+      if (!lastSpin) return 0;
+      const elapsed = Date.now() - parseInt(lastSpin);
+      const remaining = 60 - Math.floor(elapsed / 60000);
+      return remaining > 0 ? remaining : 0;
+    }
+
+    function updateTimer() {
+      if (!canSpin()) {
+        const remaining = getRemainingTime();
+        timerDiv.innerHTML = `<i class="fas fa-clock"></i> Tiempo restante: ${remaining} minutos`;
+        spinBtn.disabled = true;
+      } else {
+        timerDiv.innerHTML = "<i class='fas fa-check-circle'></i> ¡Puedes girar la ruleta!";
+        spinBtn.disabled = false;
+      }
+    }
+    
+    function updateMinimizedTimer() {
+      if (!canSpin()) {
+        const remaining = getRemainingTime();
+        minimizedTimerDiv.innerHTML = `<i class="fas fa-clock"></i> ${remaining} min restantes`;
+      } else {
+        minimizedTimerDiv.innerHTML = "<i class='fas fa-gift'></i> Listo para girar";
+      }
+    }
+
+    // Inicializar ruleta
+    drawRouletteWheel();
+    updateTimer();
+    updateMinimizedTimer();
+
+    // Actualizar contador cada minuto
+    setInterval(() => {
+      updateTimer();
+      updateMinimizedTimer();
+    }, 60000);
+
+    // --- Mapa + overlay ---
+    const tooltip = document.getElementById("tooltip");
+    const imagen = document.getElementById("imagen");
+    const areas = document.querySelectorAll("area");
+    const iframe = document.getElementById("gmap");
+    const overlay = document.getElementById("infoOverlay");
+    const overlayImg = document.getElementById("overlayImg");
+    const overlayTitle = document.getElementById("overlayTitle");
+    const overlayText = document.getElementById("overlayText");
+    const closeOverlayBtn = document.getElementById("closeOverlay");
+
+    function openAreaInfo(area) {
+      const lat = area.dataset.lat;
+      const lng = area.dataset.lng;
+      const zoom = area.dataset.zoom || 12;
+      const frases = area.dataset.random.split("|");
+      const frase = frases[Math.floor(Math.random() * frases.length)];
+
+      iframe.src = `https://www.google.com/maps?q=${lat},${lng}&z=${zoom}&output=embed`;
+      overlayImg.src = area.dataset.img;
+      overlayTitle.textContent = area.dataset.nombre;
+      overlayText.innerHTML = `<p>${frase}</p>`;
+      overlay.style.display = "block";
+    }
+
+    areas.forEach(area => {
+      area.addEventListener("mouseenter", (e) => {
+        tooltip.textContent = `Ver ${area.dataset.nombre}`;
+        tooltip.style.opacity = 1;
+      });
+      
+      area.addEventListener("mousemove", e => {
+        const rect = imagen.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        tooltip.style.left = `${x}px`;
+        tooltip.style.top = `${y}px`;
+      });
+      
+      area.addEventListener("mouseleave", () => {
+        tooltip.style.opacity = 0;
+      });
+
+      area.addEventListener("click", (e) => {
+        e.preventDefault();
+        openAreaInfo(area);
+      });
+    });
+
+    // Cerrar overlay
+    closeOverlayBtn.addEventListener("click", () => {
+      overlay.style.display = "none";
+    });
+
+    // Cerrar overlay al hacer clic fuera
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) {
+        overlay.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>
