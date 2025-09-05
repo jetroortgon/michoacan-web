@@ -122,6 +122,28 @@
 </head>
 <body>
 
+<!-- Botón para volver al menú -->
+<button id="btnVolver" onclick="window.location.href='inicio.html'">⬅️ Volver al Menú</button>
+
+<style>
+#btnVolver {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    background-color: #fff;
+    border: 2px solid #04AA6D;
+    color: #04AA6D;
+    font-size: 1em;
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    z-index: 300;
+    transition: 0.3s;
+}
+#btnVolver:hover { background-color: #e9f9f0; }
+</style>
+
+
   <!-- Barra de pestañas -->
   <div class="tab">
     <button class="tablinks" onclick="openTab(event, 'Insignias')" id="defaultOpen">Insignias</button>
