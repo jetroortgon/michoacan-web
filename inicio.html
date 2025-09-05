@@ -291,19 +291,22 @@ h2 {
 <script>
 // Racha
 let racha = localStorage.getItem('rachaDias') ? parseInt(localStorage.getItem('rachaDias')) : 0;
-let ultimoDia = localStorage.getItem('ultimoDia');
-const hoy = new Date().toDateString();
+let ultimoTiempo = localStorage.getItem('ultimoTiempo'); // guardamos timestamp
+const ahora = Date.now();
 const maxRacha = 7;
 const popupOverlay = document.getElementById('popupOverlay');
 const textoRacha = document.getElementById('rachaTexto');
 const barra = document.getElementById('barra');
 
 function reclamarRacha() {
-    if(ultimoDia !== hoy){
-        if(racha < maxRacha) racha++;
+    const unDia = 24 * 60 * 60 * 1000; // 24 horas en ms
+
+    if (!ultimoTiempo || (ahora - parseInt(ultimoTiempo)) >= unDia) {
+        if (racha < maxRacha) racha++;
         localStorage.setItem('rachaDias', racha);
-        localStorage.setItem('ultimoDia', hoy);
+        localStorage.setItem('ultimoTiempo', ahora);
     }
+
     textoRacha.textContent = `Racha: ${racha}/${maxRacha}`;
     popupOverlay.style.display = 'flex';
     document.getElementById('modalRecompensa').style.display = 'none';
@@ -355,4 +358,3 @@ function irA(pagina){ window.location.href = pagina; }
 </script>
 </body>
 </html>
-
