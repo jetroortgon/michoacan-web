@@ -147,18 +147,8 @@
     <div class="wrap">
       
     
-<div class="brand" style="
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  margin: 20px 0;
-  border: none;
-  background: none;
-  box-shadow: none;
-">
-  <img src="portada.png" alt="Portada Michoacán" style="width: 200px; height: auto;" />
-</div>
+    <div class="brand" style="display:flex; justify-content:center; align-items:center; border:none; background:none; box-shadow:none; margin:20px 0;">
+      <img src="portada.png" alt="Portada Michoacán" style="width:200px; height:auto;"/>
     </div>
 
 
@@ -312,7 +302,8 @@ document.getElementById("cerrar-juegos").addEventListener("click",()=>{
             <p class="place-desc">${l.descripcion}</p>
             <span class="badge">${l.tipo}</span>
           </div>
-          <button class="btn" style="padding:8px 10px"><span class="material-symbols-rounded">explore</span></button>`;
+          <button class="btn" style="padding:8px 10px"><span class="material-symbols-rounded">explore</span></button>
+          <a class="chip" href="https://www.google.com/maps/search/?api=1&query=${l.lat},${l.lng}" target="_blank" title="Abrir en Google Maps (mapa)" aria-label="Abrir en Google Maps (mapa)">🗺️</a>`;
         el.addEventListener('click', ()=> selectPlace(l));
         root.appendChild(el);
       })
@@ -455,6 +446,8 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, 
         <a class="chip" href="${toCompassLink(l.lat,l.lng)}" target="_blank" title="Abrir en Google Maps" aria-label="Abrir en Google Maps">
           🧭
         </a>
+        <a class="chip" href="${toCompassLink(l.lat,l.lng)}" target="_blank" title="Abrir en Google Maps (mapa)" aria-label="Abrir en Google Maps (mapa)">🗺️</a>
+        <a class="chip" href="${toCompassLink(l.lat,l.lng)}" target="_blank" title="Abrir en Google Maps (mapa)" aria-label="Abrir en Google Maps (mapa)">🗺️</a>
       `;
       item.addEventListener('click', (e)=>{
         // Avoid capturing clicks on the compass
