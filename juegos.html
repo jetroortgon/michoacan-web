@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Retos de Michoacán</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: linear-gradient(to bottom, #f0fff4, #e6f4f1);
+      margin:0; text-align:center;
+    }
+    header {
+      background: linear-gradient(90deg, #2E8B57, #3cb371);
+      color:white; padding:1.2rem;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+    }
+    h1 { margin:0; font-size:1.8rem; }
+    h2 { margin-top:1rem; color:#2E8B57; }
+
+    button {
+      padding: 0.8rem 1.3rem; margin: 0.5rem; cursor: pointer;
+      background: linear-gradient(135deg, #2E8B57, #3cb371);
+      color: white; border: none; border-radius: 12px;
+      font-weight: bold; font-size: 1rem;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      transition: transform 0.2s, background 0.3s;
+    }
+    button:hover { transform: scale(1.05); background: linear-gradient(135deg, #3cb371, #2E8B57); }
+    button:active { transform: scale(0.95); }
+    button:disabled { background:#888; cursor:not-allowed; transform:none; }
+
+    #menu-grid {
+      display:grid;
+      grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+      gap:1rem; max-width:800px; margin:1.5rem auto;
+      padding:0 1rem;
+    }
+    .menu-card {
+      background:white; border-radius:14px; padding:1rem;
+      box-shadow:0 3px 10px rgba(0,0,0,0.15);
+      transition:transform 0.3s;
+    }
+    .menu-card.locked { opacity:0.5; }
+    .menu-card:hover { transform:translateY(-5px); }
+    .menu-card h3 { margin:0.5rem 0; color:#2E8B57; }
+    .lock-text { color:#c00; font-size:0.9rem; margin-top:5px; }
+
+    #progress-container {
+      width:80%; margin:1rem auto; background:#ddd;
+      border-radius:20px; overflow:hidden; height:26px;
+    }
+    #progress-bar {
+      height:100%; background: linear-gradient(90deg, #2E8B57, #6ccf96);
+      width:0%; text-align:right; color:white;
+      font-size:0.9rem; padding-right:5px;
+      line-height:26px; transition: width 0.6s ease;
+    }
+    #mariposa-progreso { margin:1rem; font-size:1.1rem; }
+
+    #letrero {
+      display:none; width:80%; margin:12px auto; padding:.8rem 1rem;
+      border-radius:12px; font-weight:600; text-align:center;
+      animation: aparecer 0.5s ease;
+    }
+    #letrero.ok   { background:#d4edda; color:#155724; }
+    #letrero.err  { background:#f8d7da; color:#721c24; }
+    #letrero.info { background:#fff3cd; color:#856404; }
+    @keyframes aparecer { from{opacity:0; transform:scale(0.9);} to{opacity:1; transform:scale(1);} }
+
+    input[type="text"] {
+      padding:0.6rem; width:80%; margin:0.5rem;
+      border:2px solid #2E8B57; border-radius:10px;
+      font-size:1rem;
+    }
+
+    /* Ventana recompensas */
+    #recompensas {
+      display:none;
+      position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+      background:white; padding:1.2rem; border-radius:14px;
+      box-shadow:0 5px 15px rgba(0,0,0,0.3);
+      width:90%; max-width:400px; z-index:1000;
+      text-align:left;
+    }
+    #recompensas h2 { text-align:center; margin-bottom:1rem; }
+    #overlay {
+      display:none;
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.5); z-index:900;
+    }
+
+    /* Curiosidades (se deja para compatibilidad) */
+    #curiosidades {
+      display:none; background:#fff; margin:20px auto; padding:15px;
+      max-width:600px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.2);
+      text-align:left;
+    }
+    #curiosidades h3 { text-align:center; color:#2E8B57; }
+
+    /* ===== Ventana centrada de resultados ===== */
+    #overlay-resultado{
+      display:none; position:fixed; inset:0;
+      background:rgba(0,0,0,0.45); z-index:2000;
+    }
+    #resultado{
+      display:none; position:fixed; top:50%; left:50%;
+      transform:translate(-50%,-50%); z-index:2100;
+      width:90%; max-width:640px; background:#ffffff; color:#123;
+      border-radius:16px; box-shadow:0 20px 40px rgba(0,0,0,0.25);
+      padding:1.2rem 1.2rem 1rem;
+      text-align:left; animation: aparecer 0.25s ease;
+    }
+    #resultado h3{
+      margin:0 0 .6rem; text-align:center; color:#2E8B57;
+    }
+    #resultado .contenido{
+      max-height:50vh; overflow:auto; line-height:1.4;
+    }
+    #resultado .contador{
+      text-align:center; margin-top:0.8rem; font-weight:600; color:#2E8B57;
+    }
+  </style>
+</head>
+<body>
+  <header><h1>🦋 Retos Interactivos - Michoacán</h1></header>
+  <div style="margin:20px;">
+    <button onclick="irA('inicio.html')">⬅️ Volver al inicio</button>
+    <button onclick="irA('index.html')">✈️ Volver al turista</button>
+  </div>
+
+
+  <p><b>Mariposas:</b> <span id="mariposas">0</span> | <b>Nivel:</b> <span id="nivel">1</span></p>
+  <div id="progress-container"><div id="progress-bar">0%</div></div>
+  <div id="mariposa-progreso"></div>
+  <button onclick="toggleRecompensas()">🏆 Ver recompensas</button>
+
+  <!-- Ventana recompensas -->
+  <div id="overlay" onclick="toggleRecompensas()"></div>
+  <div id="recompensas">
+    <h2>🏆 Recompensas por nivel</h2>
+    <ul>
+      <li><b>Nivel 2:</b> Nuevos retos desbloqueados 🎯</li>
+      <li><b>Nivel 3:</b> Acceso a concursos en tu localidad 📍</li>
+      <li><b>Nivel 4:</b> Descuentos exclusivos con aliados 💳</li>
+      <li><b>Nivel 5+:</b> Más sorpresas por descubrir ✨</li>
+    </ul>
+    <div style="text-align:center;">
+      <button onclick="toggleRecompensas()">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- Menú -->
+  <div id="menu">
+    <h2>Elige tu reto</h2>
+    <div id="menu-grid">
+      <div class="menu-card" id="trivia-card">
+        <h3>📚 Trivia</h3>
+        <p>Responde 2 preguntas de cultura Michoacana.</p>
+        <button id="trivia-btn" onclick="mostrarReto('trivia')">Jugar</button>
+        <div id="trivia-lock" class="lock-text"></div>
+      </div>
+      <div class="menu-card" id="trivia-hist-card">
+        <h3>📜 Trivia Histórica</h3>
+        <p>Sobre hechos y personajes históricos.</p>
+        <button id="trivia-hist-btn" onclick="mostrarReto('trivia-hist')">Jugar</button>
+        <div id="trivia-hist-lock" class="lock-text"></div>
+      </div>
+      <div class="menu-card" id="adivinanza-card">
+        <h3>❓ Adivinanza</h3>
+        <p>Descubre de qué lugar o elemento se habla.</p>
+        <button id="adivinanza-btn" onclick="mostrarReto('adivinanza')">Jugar</button>
+        <div id="adivinanza-lock" class="lock-text"></div>
+      </div>
+      <div class="menu-card" id="vf-card">
+        <h3>✅❌ V/F</h3>
+        <p>Responde si la afirmación es verdadera o falsa.</p>
+        <button id="vf-btn" onclick="mostrarReto('vf')">Jugar</button>
+        <div id="vf-lock" class="lock-text"></div>
+      </div>
+      <div class="menu-card" id="ordenar-card">
+        <h3>🔠 Ordenar</h3>
+        <p>Ordena las letras para encontrar el lugar.</p>
+        <button id="ordenar-btn" onclick="mostrarReto('ordenar')">Jugar</button>
+        <div id="ordenar-lock" class="lock-text"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Retos -->
+  <div id="trivia" class="reto" style="display:none;"><h2>📚 Trivia</h2><div id="trivia-box"></div></div>
+  <div id="trivia-hist" class="reto" style="display:none;"><h2>📜 Trivia Histórica</h2><div id="trivia-hist-box"></div></div>
+  <div id="adivinanza" class="reto" style="display:none;"><h2>❓ Adivinanza</h2><div id="adivinanza-pregunta"></div><input id="respuesta" placeholder="Tu respuesta"><button id="adiv-btn" onclick="checkAdivinanza()">Responder</button></div>
+  <div id="vf" class="reto" style="display:none;"><h2>✅❌ Verdadero o Falso</h2><div id="vf-box"></div></div>
+  <div id="ordenar" class="reto" style="display:none;"><h2>🔠 Ordenar</h2><div id="ordenar-box"></div></div>
+
+  <div id="curiosidades" style="display:none;"><h3>ℹ️ Infografía Cultural</h3><div id="curiosidad-text"></div></div>
+  <div id="letrero" class="info"><span id="letrero-text"></span></div>
+
+  <!-- Ventana centrada de resultados -->
+  <div id="overlay-resultado"></div>
+  <div id="resultado">
+    <h3>Resultados</h3>
+    <div class="contenido" id="resultado-contenido"></div>
+    <div class="contador" id="resultado-contador"></div>
+  </div>
+
+<script>
+/* ===================== PROGRESO Y MARIPOSAS ====================== */
+let mariposas=parseInt(localStorage.getItem("mariposas")||"0");
+let nivel=parseInt(localStorage.getItem("nivel")||"1");
+document.getElementById("mariposas").textContent=mariposas;
+document.getElementById("nivel").textContent=nivel;
+actualizarBarra();
+
+function mostrarLetrero(tipo,msg){
+  let box=document.getElementById("letrero");
+  box.className=tipo; box.style.display="block";
+  document.getElementById("letrero-text").innerHTML=msg;
+}
+function ocultarLetrero(){ document.getElementById("letrero").style.display="none"; }
+
+function addMariposas(success,puntos=1,msgErr=""){
+  if(!success){ mostrarLetrero("err","❌ "+msgErr); return; }
+  mariposas+=puntos;
+  mostrarLetrero("ok",`¡Correcto! +${puntos} 🦋`);
+  if(mariposas>=100*nivel){ nivel++; mostrarLetrero("ok",`🎉 Nivel ${nivel} alcanzado`); }
+  localStorage.setItem("mariposas",mariposas);
+  localStorage.setItem("nivel",nivel);
+  actualizarBarra();
+}
+function actualizarBarra(){
+  let progreso=(mariposas%100);
+  let porc=(progreso/100)*100;
+  document.getElementById("progress-bar").style.width=porc+"%";
+  document.getElementById("progress-bar").textContent=Math.floor(porc)+"%";
+  document.getElementById("mariposa-progreso").textContent=`Progreso: ${progreso}/100 🦋`;
+  document.getElementById("mariposas").textContent=mariposas;
+  document.getElementById("nivel").textContent=nivel;
+}
+function toggleRecompensas(){
+  let overlay=document.getElementById("overlay");
+  let box=document.getElementById("recompensas");
+  let visible=(box.style.display==="block");
+  overlay.style.display=visible?"none":"block";
+  box.style.display=visible?"none":"block";
+}
+
+/* ===================== BLOQUEO DE 24 HORAS (demo: 10 min) ====================== */
+function puedeJugar(id){
+  let u=localStorage.getItem("lastPlayed_"+id);
+  if(!u) return true;
+  let d=Date.now()-parseInt(u);
+  return d>=600000; // 10 minutos (ajusta a 86400000 para 24h)
+}
+function tiempoRestante(id){
+  let u=localStorage.getItem("lastPlayed_"+id);
+  if(!u) return 0;
+  let d=Date.now()-parseInt(u);
+  return 600000-d>0?600000-d:0;
+}
+function marcarJugado(id){
+  localStorage.setItem("lastPlayed_"+id,Date.now());
+  actualizarBloqueosMenu();
+}
+function actualizarBloqueosMenu(){
+  ["trivia","trivia-hist","adivinanza","vf","ordenar"].forEach(id=>{
+    let btn=document.getElementById(id+"-btn");
+    let lock=document.getElementById(id+"-lock");
+    let card=document.getElementById(id+"-card");
+    if(puedeJugar(id)){
+      btn.disabled=false; card.classList.remove("locked"); lock.textContent="";
+    }else{
+      btn.disabled=true; card.classList.add("locked");
+      let t=tiempoRestante(id); let h=Math.floor(t/3600000), m=Math.floor((t%3600000)/60000);
+      lock.textContent=`🔒 Disponible en ${h}h ${m}m`;
+    }
+  });
+}
+setInterval(actualizarBloqueosMenu,60000);
+window.onload=actualizarBloqueosMenu;
+
+/* ===================== UTILIDADES DE BLOQUEO Y RESULTADOS ====================== */
+function deshabilitarSeccion(seccionId){
+  const cont=document.getElementById(seccionId);
+  if(!cont) return;
+  cont.querySelectorAll('input,button,textarea,select').forEach(el=>{ el.disabled=true; });
+}
+function habilitarMenu(){
+  document.querySelectorAll(".reto").forEach(r=>r.style.display="none");
+  document.getElementById("menu").style.display="block";
+}
+
+/* Ventana centrada de resultados con cuenta regresiva */
+let temporizador=null;
+function mostrarResultado(html, segundos=3, onFinish=()=>{}){
+  document.getElementById("resultado-contenido").innerHTML=html;
+  const overlay = document.getElementById("overlay-resultado");
+  const modal = document.getElementById("resultado");
+  overlay.style.display="block";
+  modal.style.display="block";
+  let restante=segundos;
+  document.getElementById("resultado-contador").textContent=`Volviendo al menú en ${restante}s…`;
+  clearInterval(temporizador);
+  temporizador = setInterval(()=>{
+    restante--;
+    document.getElementById("resultado-contador").textContent=`Volviendo al menú en ${restante}s…`;
+    if(restante<=0){
+      clearInterval(temporizador);
+      cerrarResultado();
+      onFinish();
+    }
+  },1000);
+}
+function cerrarResultado(){
+  document.getElementById("overlay-resultado").style.display="none";
+  document.getElementById("resultado").style.display="none";
+}
+
+/* ===================== JUEGOS Y FLUJO ====================== */
+function mostrarReto(id){
+  if(!puedeJugar(id)) return;
+  ocultarLetrero();
+  document.querySelectorAll(".reto").forEach(r=>r.style.display="none");
+  document.getElementById("menu").style.display="none";
+  document.getElementById("curiosidades").style.display="none";
+  document.getElementById(id).style.display="block";
+
+  if(id==="trivia") renderTrivia();
+  if(id==="trivia-hist") renderTriviaHist();
+  if(id==="adivinanza") nuevaAdivinanza();
+  if(id==="vf") renderVF();
+  if(id==="ordenar") nuevaOrdenar();
+}
+
+/* ===================== BASE DE PREGUNTAS ====================== */
+const trivia=[
+ {q:"¿Cuál es la capital de Michoacán?",options:["Uruapan","Morelia","Pátzcuaro"],answer:"Morelia",info:"Morelia es Patrimonio de la Humanidad por la UNESCO."},
+ {q:"¿Qué mariposa llega cada año a Michoacán?",options:["Monarca","Azul","Tigre"],answer:"Monarca",info:"Las mariposas monarca recorren miles de km hasta Michoacán."}
+];
+const triviaHist=[
+ {q:"¿Quién fue Don Vasco de Quiroga?",options:["Primer obispo de Michoacán","Un virrey","Un emperador"],answer:"Primer obispo de Michoacán",info:"Fundó hospitales-pueblo y promovió artesanías."},
+ {q:"¿En qué año inició la Independencia de México?",options:["1810","1821","1910"],answer:"1810",info:"Miguel Hidalgo inició la lucha en 1810."}
+];
+const adivinanzas=[
+ {preg:"Soy un lago famoso por su belleza en Michoacán, ¿cuál soy?",resp:"PATZCUARO",info:"El lago de Pátzcuaro es hogar de la cultura purépecha."},
+ {preg:"Soy un dulce típico hecho de fruta cristalizada, ¿qué soy?",resp:"ATE",info:"El ate es un dulce tradicional elaborado con frutas."}
+];
+const vf=[
+ {q:"La mariposa monarca se queda en Michoacán todo el año.",ans:"F",info:"Solo llega en invierno y luego regresa al norte."},
+ {q:"Morelia antes se llamó Valladolid.",ans:"V",info:"El nombre cambió en honor a José María Morelos."}
+];
+const ordenar=[
+ {word:"TZINTZUNTZAN",info:"Fue la capital del Imperio Purépecha."},
+ {word:"MORELIA",info:"Ciudad Patrimonio de la Humanidad."}
+];
+
+/* ===================== JUEGO: TRIVIA ====================== */
+function renderTrivia(){
+  let t=document.getElementById("trivia-box"); t.innerHTML="";
+  let sel=[...trivia].sort(()=>0.5-Math.random()).slice(0,2);
+  sel.forEach((q,i)=>{
+    t.innerHTML+=`<p>${q.q}</p>`;
+    q.options.forEach(o=>{t.innerHTML+=`<label><input type="radio" name="q${i}" value="${o}"> ${o}</label><br>`;});
+  });
+  t.innerHTML+=`<button id="trivia-finalizar" onclick="checkTrivia(${JSON.stringify(sel).replace(/"/g,'&quot;')})">Finalizar</button>`;
+}
+function checkTrivia(sel){
+  deshabilitarSeccion("trivia");
+  let cur="";
+  sel.forEach((t,i)=>{
+    let selOpt=document.querySelector(`input[name="q${i}"]:checked`);
+    let e=selOpt?selOpt.value:"(sin respuesta)";
+    cur+=`<p><b>${t.q}</b><br>✅ ${t.answer}<br>📌 ${t.info}</p>`;
+    if(e===t.answer) addMariposas(true,2); else mostrarLetrero("err",`Incorrecto, era ${t.answer}`);
+  });
+  mostrarResultado(cur,3,()=>{ marcarJugado('trivia'); habilitarMenu(); });
+}
+
+/* ===================== JUEGO: TRIVIA HIST ====================== */
+function renderTriviaHist(){
+  let t=document.getElementById("trivia-hist-box"); t.innerHTML="";
+  let sel=[...triviaHist].sort(()=>0.5-Math.random()).slice(0,2);
+  sel.forEach((q,i)=>{
+    t.innerHTML+=`<p>${q.q}</p>`;
+    q.options.forEach(o=>{t.innerHTML+=`<label><input type="radio" name="qh${i}" value="${o}"> ${o}</label><br>`;});
+  });
+  t.innerHTML+=`<button id="trivia-hist-finalizar" onclick="checkTriviaHist(${JSON.stringify(sel).replace(/"/g,'&quot;')})">Finalizar</button>`;
+}
+function checkTriviaHist(sel){
+  deshabilitarSeccion("trivia-hist");
+  let cur="";
+  sel.forEach((t,i)=>{
+    let selOpt=document.querySelector(`input[name="qh${i}"]:checked`);
+    let e=selOpt?selOpt.value:"(sin respuesta)";
+    cur+=`<p><b>${t.q}</b><br>✅ ${t.answer}<br>📌 ${t.info}</p>`;
+    if(e===t.answer) addMariposas(true,2); else mostrarLetrero("err",`Incorrecto, era ${t.answer}`);
+  });
+  mostrarResultado(cur,3,()=>{ marcarJugado('trivia-hist'); habilitarMenu(); });
+}
+
+/* ===================== JUEGO: ADIVINANZA ====================== */
+let adivActual={};
+function nuevaAdivinanza(){
+  adivActual=adivinanzas[Math.floor(Math.random()*adivinanzas.length)];
+  document.getElementById("adivinanza-pregunta").textContent=adivActual.preg;
+  document.getElementById("respuesta").value="";
+  const adiv=document.getElementById("adivinanza");
+  adiv.querySelectorAll('input,button').forEach(el=>el.disabled=false);
+}
+function checkAdivinanza(){
+  deshabilitarSeccion("adivinanza");
+  let r=document.getElementById("respuesta").value.trim().toUpperCase();
+  if(r===adivActual.resp) addMariposas(true,2); else mostrarLetrero("err",`Incorrecto, era ${adivActual.resp}`);
+  const cur=`<p><b>Respuesta correcta:</b> ${adivActual.resp}<br>📌 ${adivActual.info}</p>`;
+  mostrarResultado(cur,3,()=>{ marcarJugado('adivinanza'); habilitarMenu(); });
+}
+
+/* ===================== JUEGO: VF ====================== */
+function renderVF(){
+  let t=document.getElementById("vf-box"); 
+  t.innerHTML="";
+  vfSeleccionadas=[...vf]; 
+  respuestasVF=new Array(vfSeleccionadas.length).fill(null);
+
+  vfSeleccionadas.forEach((q,i)=>{
+    t.innerHTML+=`
+      <div id="vf-q${i}">
+        <p>${q.q}</p>
+        <button onclick="responderVF(${i},'V')">V</button>
+        <button onclick="responderVF(${i},'F')">F</button>
+      </div>
+    `;
+  });
+}
+
+let vfSeleccionadas=[];
+let respuestasVF=[];
+
+function responderVF(indice,resp){
+  if(respuestasVF[indice]!==null) return;
+  respuestasVF[indice]=resp;
+  const cont=document.getElementById("vf-q"+indice);
+  cont.querySelectorAll("button").forEach(b=>b.disabled=true);
+
+  if(respuestasVF.every(r=>r!==null)){
+    finalizarVF();
+  }
+}
+
+function finalizarVF(){
+  let cur="";
+  vfSeleccionadas.forEach((q,i)=>{
+    let correcto=(respuestasVF[i]===q.ans);
+    if(correcto){ addMariposas(true,2); }
+    else { mostrarLetrero("err",`Incorrecto en: "${q.q}"`); }
+    cur+=`<p><b>${q.q}</b><br>✅ ${q.ans}<br>📌 ${q.info}</p>`;
+  });
+  mostrarResultado(cur,3,()=>{ marcarJugado('vf'); habilitarMenu(); });
+}
+
+/* ===================== JUEGO: ORDENAR ====================== */
+let ordenarActual={};
+function nuevaOrdenar(){
+  ordenarActual=ordenar[Math.floor(Math.random()*ordenar.length)];
+  let arr=ordenarActual.word.split('').sort(()=>0.5-Math.random());
+  document.getElementById("ordenar-box").innerHTML=`<p>Ordena las letras: ${arr.join(' ')}</p>
+  <input id="ordenar-resp" placeholder="Respuesta"><button id="ordenar-btn-resp" onclick="checkOrdenar()">Responder</button>`;
+  const ord=document.getElementById("ordenar");
+  ord.querySelectorAll('input,button').forEach(el=>el.disabled=false);
+}
+function checkOrdenar(){
+  deshabilitarSeccion("ordenar");
+  let r=document.getElementById("ordenar-resp").value.trim().toUpperCase();
+  if(r===ordenarActual.word) addMariposas(true,2); else mostrarLetrero("err",`Incorrecto, era ${ordenarActual.word}`);
+  const cur=`<p><b>Respuesta correcta:</b> ${ordenarActual.word}<br>📌 ${ordenarActual.info}</p>`;
+  mostrarResultado(cur,3,()=>{ marcarJugado('ordenar'); habilitarMenu(); });
+}
+
+function irA(pagina){ window.location.href = pagina; }
+</script>
+</body>
+</html>

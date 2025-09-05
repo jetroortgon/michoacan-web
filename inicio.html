@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caminos de Michoacán</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Fredoka One', cursive;
+    background: url('fondo.png') no-repeat center center fixed;
+    background-size: cover;
+    color: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    position: relative;
+}
+
+h1 {
+    font-size: 4em;
+    color: #fff;
+    margin: 0;
+    text-shadow: 1px 1px 2px #000;
+}
+
+h2 {
+    font-size: 1.8em;
+    font-style: italic;
+    color: #ffb6c1;
+    margin: 15px 0 40px 0;
+    text-shadow: 1px 1px 2px #000;
+}
+
+.menu {
+    display: none;
+    flex-direction: column;
+    gap: 25px;
+    margin-top: 20px;
+}
+
+.menu button {
+    text-decoration: none;
+    color: #4b0000;
+    background-color: #fff;
+    padding: 18px 60px;
+    border: 3px solid #4b0000;
+    font-size: 1.5em;
+    font-weight: 500;
+    text-align: center;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: 0.3s;
+}
+
+.menu button:hover {
+    background-color: #f2f2f2;
+    transform: scale(1.05);
+}
+
+/* Modal y popup */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+#modalRecompensa { z-index: 200; }
+
+#recompensa {
+    background-color: #fff;
+    padding: 30px 50px;
+    border: 3px solid #800000;
+    border-radius: 15px;
+    text-align: center;
+    max-width: 80%;
+    color: #4b0000;
+}
+
+#recompensa button {
+    margin-top: 20px;
+    padding: 10px 25px;
+    font-size: 1.1em;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    background-color: #ffd700;
+    color: #4b0000;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+#recompensa button:hover { background-color: #ffec70; }
+
+#popupOverlay { display: none; }
+
+#popupRacha {
+    background-color: #fff;
+    color: #4b0000;
+    padding: 25px 50px;
+    border-radius: 20px;
+    font-size: 2em;
+    font-weight: bold;
+    text-align: center;
+    position: relative;
+    min-width: 300px;
+    border: 3px solid #800000;
+}
+
+#popupRacha .cerrar {
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    width: 40px;
+    height: 40px;
+    background-color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #4b0000;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#popupRacha .cerrar:hover {
+    background-color: #f2f2f2;
+}
+
+.barra-container {
+    margin-top: 20px;
+    width: 100%;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px solid #4b0000;
+}
+
+.barra {
+    height: 20px;
+    width: 0%;
+    background: linear-gradient(90deg, #ff4500, #ffcc00);
+    border-radius: 10px;
+    transition: width 1s ease-in-out;
+}
+
+/* Noticias lateral */
+#panel {
+    position: fixed;
+    top: 50%;
+    left: -300px;
+    transform: translateY(-50%);
+    width: 300px;
+    height: 400px;
+    background-color: #fff;
+    border-radius: 15px;
+    border: 3px solid #4b0000;
+    overflow-y: auto;
+    padding: 10px;
+    box-sizing: border-box;
+    transition: left 0.3s ease;
+}
+
+#panel h2 {
+    margin-top: 0;
+    text-align: center;
+    color: #ffb6c1;
+}
+
+.noticia {
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.noticia a {
+    color: #4b0000;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.noticia a:hover { text-decoration: underline; }
+
+#toggleBtn {
+    position: fixed;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    background-color: #fff;
+    border: 3px solid #4b0000;
+    color: #4b0000;
+    font-size: 24px;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: 0.3s;
+}
+
+#toggleBtn:hover { background-color: #f2f2f2; }
+
+/* Sabías que */
+#sabiasQue {
+    position: fixed;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    width: 250px;
+    height: 150px;
+    background-color: #fff;
+    border-radius: 15px;
+    padding: 15px;
+    color: #4b0000;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 3px solid #4b0000;
+}
+
+#sabiasQue h2 {
+    margin: 0;
+    font-size: 1.3em;
+    color: #ffb6c1;
+}
+
+#datoRandom {
+    margin: 0;
+    font-size: 1em;
+    line-height: 1.3em;
+    opacity: 1;
+}
+</style>
+</head>
+<body>
+<h1>Caminos de Michoacán</h1>
+<h2>y pueblos que voy pasando!</h2>
+
+<div class="overlay" id="modalRecompensa">
+    <div id="recompensa">
+        <h3>¡Recompensa diaria! 🎁</h3>
+        <button onclick="reclamarRacha()">Reclamar</button>
+    </div>
+</div>
+
+<div class="overlay" id="popupOverlay">
+    <div id="popupRacha">
+        <div class="cerrar" onclick="cerrarPopup()">✖</div>
+        <p id="rachaTexto"></p>
+        <div class="barra-container">
+            <div class="barra" id="barra"></div>
+        </div>
+    </div>
+</div>
+
+<!-- MENU -->
+<div class="menu">
+    <button onclick="irA('juegos.html')">🎡 Modo Juego</button>
+    <button onclick="irA('index.html')">✈️ Modo Turista</button>
+    <button onclick="irA('adrian18[1].html')">🗺️ Explora tu mapa</button>
+</div>
+
+<!-- PANEL DE NOTICIAS -->
+<div id="panel">
+    <h2>Noticias Michoacán</h2>
+    <div class="noticia"><strong>🌸 Festival de la Flor de Nochebuena</strong><br><a href="#">Ver fuente</a></div>
+    <div class="noticia"><strong>🛶 Paseos en el Lago de Pátzcuaro</strong><br><a href="#">Ver fuente</a></div>
+    <div class="noticia"><strong>🍫 Degustación de Dulces Típicos</strong><br><a href="#">Ver fuente</a></div>
+    <div class="noticia"><strong>🕯️ Noche de Muertos Tradicional</strong><br><a href="#">Ver fuente</a></div>
+    <div class="noticia"><strong>🎶 Conciertos en Morelia</strong><br><a href="#">Ver fuente</a></div>
+</div>
+<button id="toggleBtn" onclick="togglePanel()">&#9654;</button>
+
+<div id="sabiasQue">
+    <h2>¿Sabías que?</h2>
+    <p id="datoRandom"></p>
+</div>
+
+<script>
+// Racha
+let racha = localStorage.getItem('rachaDias') ? parseInt(localStorage.getItem('rachaDias')) : 0;
+let ultimoDia = localStorage.getItem('ultimoDia');
+const hoy = new Date().toDateString();
+const maxRacha = 7;
+const popupOverlay = document.getElementById('popupOverlay');
+const textoRacha = document.getElementById('rachaTexto');
+const barra = document.getElementById('barra');
+
+function reclamarRacha() {
+    if(ultimoDia !== hoy){
+        if(racha < maxRacha) racha++;
+        localStorage.setItem('rachaDias', racha);
+        localStorage.setItem('ultimoDia', hoy);
+    }
+    textoRacha.textContent = `Racha: ${racha}/${maxRacha}`;
+    popupOverlay.style.display = 'flex';
+    document.getElementById('modalRecompensa').style.display = 'none';
+    document.querySelector('.menu').style.display = 'flex';
+    barra.style.width = "0%";
+    setTimeout(() => { barra.style.width = `${(racha/maxRacha)*100}%`; }, 200);
+}
+
+function cerrarPopup() { popupOverlay.style.display = 'none'; }
+
+// Panel noticias
+let isMinimized = true;
+function togglePanel() {
+    const panel = document.getElementById('panel');
+    const btn = document.getElementById('toggleBtn');
+    if (isMinimized) {
+        panel.style.left = '0';
+        btn.style.left = '300px';
+        btn.innerHTML = '&#9664;';
+    } else {
+        panel.style.left = '-300px';
+        btn.style.left = '0';
+        btn.innerHTML = '&#9654;';
+    }
+    isMinimized = !isMinimized;
+}
+
+// Sabías que
+const datos = [
+    "El lago de Pátzcuaro tiene 8 islas.",
+    "Morelia fue fundada en 1541.",
+    "El mezcal es una bebida tradicional en Michoacán.",
+    "La mariposa monarca llega cada año a la región.",
+    "Las Carnitas son famosas en todo México."
+];
+
+function mostrarDato() {
+    const p = document.getElementById('datoRandom');
+    p.textContent = datos[Math.floor(Math.random()*datos.length)];
+}
+
+mostrarDato();
+setInterval(mostrarDato, 5000);
+
+// Mostrar menú al cargar
+document.querySelector('.menu').style.display = 'flex';
+
+function irA(pagina){ window.location.href = pagina; }
+</script>
+</body>
+</html>
+
