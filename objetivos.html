@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pestaña de Insignias</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Estilo de la pestaña */
+    .tab {
+      overflow: hidden;
+      background-color: #333;
+    }
+
+    .tab button {
+      background-color: inherit;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      padding: 14px 16px;
+      color: white;
+      transition: background 0.3s;
+    }
+
+    .tab button:hover {
+      background-color: #575757;
+    }
+
+    .tab button.active {
+      background-color: #04AA6D;
+    }
+
+    /* Contenido de la pestaña */
+    .tabcontent {
+      display: none;
+      padding: 20px;
+    }
+
+    /* Perfil de usuario */
+    .perfil {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .perfil img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #04AA6D;
+    }
+
+    .perfil h3 {
+      margin: 0;
+      font-size: 22px;
+      color: #333;
+    }
+
+    .perfil-form {
+      margin-bottom: 20px;
+    }
+
+    .perfil-form input {
+      margin: 5px 0;
+      padding: 8px;
+    }
+
+    .insignias-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 20px;
+    }
+
+    .insignia {
+      text-align: center;
+      padding: 15px;
+      border-radius: 10px;
+      background: white;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      transition: transform 0.3s;
+      position: relative;
+    }
+
+    .insignia img {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+      margin-bottom: 10px;
+    }
+
+    .insignia.locked {
+      filter: grayscale(100%);
+      opacity: 0.6;
+    }
+
+    .insignia.locked::after {
+      content: "🔒";
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 20px;
+    }
+
+    .insignia:hover {
+      transform: scale(1.05);
+    }
+
+    .descripcion {
+      font-size: 13px;
+      color: #666;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barra de pestañas -->
+  <div class="tab">
+    <button class="tablinks" onclick="openTab(event, 'Insignias')" id="defaultOpen">Insignias</button>
+  </div>
+
+  <!-- Contenido de pestaña -->
+  <div id="Insignias" class="tabcontent">
+    
+    <!-- Formulario para actualizar perfil -->
+    <div class="perfil-form">
+      <label>Nombre de usuario:</label><br>
+      <input type="text" id="nombreUsuario" placeholder="Escribe tu nombre"><br><br>
+      <label>Foto de perfil:</label><br>
+      <input type="file" id="fotoPerfil" accept="image/*"><br><br>
+      <button onclick="actualizarPerfil()">Guardar Perfil</button>
+    </div>
+
+    <!-- Perfil mostrado -->
+    <div class="perfil">
+      <img id="fotoMostrada" src="https://i.pravatar.cc/150?img=12" alt="Foto de perfil">
+      <h3 id="nombreMostrado">Usuario</h3>
+    </div>
+
+    <h2>🏅 Tus Insignias</h2>
+    <p>Desbloquea insignias al completar retos.</p>
+
+    <div class="insignias-container">
+      <div class="insignia" id="badge1">
+        <img src="viva mexico.jpg" alt="Insignia 1">
+        <p><strong>Independencia</strong></p>
+        <p class="descripcion">Completa el reto especial del 16 de septiembre.</p>
+      </div>
+      <div class="insignia locked" id="badge2">
+        <img src="Dia de muertos.jpg" alt="Insignia 2">
+        <p><strong>Día de Muertos</strong></p>
+        <p class="descripcion">Participa en el reto del 2 de noviembre.</p>
+      </div>
+      <div class="insignia locked" id="badge3">
+        <img src="100 dias.jpg" alt="Insignia 3">
+        <p><strong>100 Días</strong></p>
+        <p class="descripcion">Completa 100 días consecutivos de actividad.</p>
+      </div>
+    </div>
+
+    <br>
+    <!-- Botones de prueba para desbloquear -->
+    <button onclick="unlockBadge('badge2')">🔓 Desbloquear Insignia 2</button>
+    <button onclick="unlockBadge('badge3')">🔓 Desbloquear Insignia 3</button>
+  </div>
+
+  <script>
+    // Abrir pestañas
+    function openTab(evt, tabName) {
+      let i, tabcontent, tablinks;
+      tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+      }
+      tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+      document.getElementById(tabName).style.display = "block";
+      evt.currentTarget.className += " active";
+    }
+
+    // Abrir por defecto
+    document.getElementById("defaultOpen").click();
+
+    // Función para desbloquear insignias
+    function unlockBadge(badgeId) {
+      const badge = document.getElementById(badgeId);
+      badge.classList.remove("locked");
+    }
+
+    // Actualizar perfil
+    function actualizarPerfil() {
+      const nombre = document.getElementById("nombreUsuario").value;
+      if (nombre) {
+        document.getElementById("nombreMostrado").textContent = nombre;
+        localStorage.setItem("nombreUsuario", nombre);
+      }
+
+      const archivo = document.getElementById("fotoPerfil").files[0];
+      if (archivo) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById("fotoMostrada").src = e.target.result;
+          localStorage.setItem("fotoPerfil", e.target.result);
+        };
+        reader.readAsDataURL(archivo);
+      }
+    }
+
+    // Cargar datos guardados
+    window.onload = function() {
+      const nombreGuardado = localStorage.getItem("nombreUsuario");
+      const fotoGuardada = localStorage.getItem("fotoPerfil");
+
+      if (nombreGuardado) {
+        document.getElementById("nombreMostrado").textContent = nombreGuardado;
+      }
+      if (fotoGuardada) {
+        document.getElementById("fotoMostrada").src = fotoGuardada;
+      }
+    }
+  </script>
+
+</body>
+</html>
